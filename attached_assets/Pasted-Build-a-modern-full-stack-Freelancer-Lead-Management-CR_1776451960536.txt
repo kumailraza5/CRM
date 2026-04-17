@@ -1,0 +1,173 @@
+Build a modern full-stack Freelancer Lead Management CRM for a solo web developer who finds clients from LinkedIn. Create a production-ready SaaS-style web app with clean UI, responsive design, dark/light mode, fast performance, and professional animations.
+
+Tech Stack:
+- Frontend: React + Vite + Tailwind CSS
+- Backend: Node.js + Express
+- Database: Supabase (PostgreSQL)
+- Auth: Supabase Auth
+- Charts: Recharts
+- Icons: Lucide React
+
+Project Name:
+ClientHunter CRM
+
+Purpose:
+Help a freelancer manage LinkedIn leads, outreach messages, follow-ups, and deals for website/app development clients.
+
+Main Features:
+
+1. Authentication
+- Sign up / Login / Logout
+- Protected dashboard routes
+- User-specific data
+
+2. Dashboard
+- Total Leads
+- New Leads
+- Follow-ups Due Today
+- Replies Received
+- Deals Won
+- Revenue Closed
+- Monthly performance chart
+- Pipeline overview
+
+3. Lead Management
+Create full lead system with CRUD:
+Fields:
+- Full Name
+- Company Name
+- LinkedIn URL
+- Website URL
+- Email
+- Phone
+- Country
+- Industry
+- Company Size
+- Lead Source (LinkedIn, Referral, Website, Other)
+- Status
+- Priority
+- Estimated Budget
+- Notes
+- Last Contact Date
+- Next Follow-up Date
+
+Statuses:
+- New Lead
+- Profile Checked
+- Contacted
+- Follow-up Sent
+- Replied
+- Meeting Scheduled
+- Proposal Sent
+- Won
+- Lost
+
+Priority:
+- High
+- Medium
+- Low
+
+4. Kanban Pipeline
+Drag and drop leads between statuses.
+
+5. Smart Follow-up Center
+- Leads due today
+- Overdue follow-ups
+- Upcoming follow-ups
+- Mark completed
+- Auto reschedule
+
+6. Outreach Templates
+Create saved templates:
+- Website redesign pitch
+- Ecommerce pitch
+- SEO pitch
+- App development pitch
+- Follow-up template
+
+Use one-click copy buttons.
+
+7. Search + Filters
+Filter by:
+- Country
+- Industry
+- Status
+- Priority
+- Budget Range
+- Leads with no website
+- Old website leads
+
+8. Notes Timeline
+Every lead has timeline:
+- Added lead
+- Messaged
+- Replied
+- Follow-up sent
+- Meeting done
+- Proposal sent
+
+9. Revenue Tracker
+Won deals page:
+- Client Name
+- Service Sold
+- Amount
+- Date
+- Payment Status
+
+10. Reports & Analytics
+Charts for:
+- Leads added weekly
+- Conversion rate
+- Won vs Lost
+- Best countries
+- Best industries
+
+11. Settings
+- Profile settings
+- Theme switcher
+- Notification toggles
+
+UI Design:
+- Premium SaaS dashboard
+- Sidebar navigation
+- Top navbar
+- Cards with soft shadows
+- Smooth transitions
+- Mobile responsive
+- Elegant forms/modals/tables
+
+Pages:
+- Landing Page
+- Login
+- Register
+- Dashboard
+- Leads
+- Pipeline
+- Follow-ups
+- Templates
+- Revenue
+- Reports
+- Settings
+
+Database Tables:
+users
+leads
+lead_notes
+templates
+deals
+activities
+
+Bonus AI Features:
+- Lead score suggestion based on company size + website quality + country
+- Best follow-up reminder suggestions
+- Outreach message generator
+
+Important:
+- Seed demo data
+- Clean reusable components
+- Organized folders
+- Environment variables setup
+- Ready to run locally
+
+Final Deliverable:
+Generate complete working full-stack code with frontend + backend + database schema + setup instructions.
