@@ -43,7 +43,7 @@ if (process.env.NODE_ENV === "production") {
 
   app.use(express.static(publicPath));
 
-  app.get("/:path*", (req, res, next) => {
+  app.use((req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
