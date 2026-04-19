@@ -16,7 +16,7 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      login(email || "alex@example.com", "Alex Developer");
+      login(email || "alex@example.com");
     }, 800);
   };
 

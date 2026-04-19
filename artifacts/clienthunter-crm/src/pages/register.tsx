@@ -11,13 +11,13 @@ export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { register } = useAuth();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setTimeout(() => {
-      login(email || "alex@example.com", name || "Alex Developer");
+      register(email || "alex@example.com", name || "Alex Developer");
     }, 800);
   };
 
