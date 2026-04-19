@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: lead-manager-pro
+    env: node
+    plan: free
+    buildCommand: pnpm install && pnpm run build
+    startCommand: pnpm --filter @workspace/api-server start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Set this in Render dashboard
+      - key: PORT
+        value: 10000
+      - key: API_PORT
+        value: 10000
+      - key: BASE_PATH
+        value: /
