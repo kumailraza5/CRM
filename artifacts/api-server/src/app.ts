@@ -39,6 +39,8 @@ if (process.env.NODE_ENV === "production") {
   // Point to the frontend build directory relative to this file's location in dist
   const publicPath = path.resolve(__dirname, "../../clienthunter-crm/dist/public");
 
+  logger.info({ publicPath, __dirname }, "Serving static files");
+
   app.use(express.static(publicPath));
 
   app.get("*", (req, res, next) => {
