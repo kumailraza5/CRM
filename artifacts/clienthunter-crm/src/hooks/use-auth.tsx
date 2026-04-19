@@ -9,7 +9,8 @@ type User = {
 
 type AuthContextType = {
   user: User | null;
-  login: (email: string, name?: string) => void;
+  login: (email: string) => void;
+  register: (email: string, name: string) => void;
   logout: () => void;
 };
 
@@ -22,8 +23,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [, setLocation] = useLocation();
 
-  const login = (email: string, name = "Admin") => {
-    const newUser = { id: "1", name, email };
+  const getMockUsers = (): User[] => {
+    const saved = localStorage.getItem("clienthunter_users");
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  const login = (email: string) => {
+    const users = getMockUsers();
+    const foundUser = users.find(u => u.email === email);
+    
+    // If user exists, use their details, otherwise use a default
+    const userToLogin = foundUser || { id: "1", name: "Alex Developer", email };
+    
+    setUser(userToLogin);
+    localStorage.setItem("clienthunter_user", JSON.stringify(userToLogin));
+    setLocation("/dashboard");
+  };
+
+  const register = (email: string, name: string) => {
+    const users = getMockUsers();
+    const newUser = { id: Date.now().toString(), name, email };
+    
+    // Save to users list if not already there
+    if (!users.find(u => u.email === email)) {
+      users.push(newUser);
+      localStorage.setItem("clienthunter_users", JSON.stringify(users));
+    }
+    
     setUser(newUser);
     localStorage.setItem("clienthunter_user", JSON.stringify(newUser));
     setLocation("/dashboard");
@@ -36,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
