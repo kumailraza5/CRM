@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, leadNotesTable, activitiesTable, leadsTable } from "@workspace/db";
 import {
   ListNotesParams,
@@ -22,7 +22,12 @@ router.get("/leads/:leadId/notes", async (req, res): Promise<void> => {
   const notes = await db
     .select()
     .from(leadNotesTable)
-    .where(eq(leadNotesTable.leadId, params.data.leadId))
+    .where(
+      and(
+        eq(leadNotesTable.leadId, params.data.leadId),
+        eq(leadNotesTable.userId, req.userId!)
+      )
+    )
     .orderBy(leadNotesTable.createdAt);
 
   res.json(ListNotesResponse.parse(notes.map(n => ({
@@ -46,15 +51,22 @@ router.post("/leads/:leadId/notes", async (req, res): Promise<void> => {
   }
 
   const [note] = await db.insert(leadNotesTable).values({
+    userId: req.userId!,
     leadId: params.data.leadId,
     type: body.data.type as any,
     content: body.data.content,
   }).returning();
 
   // Get lead name for activity
-  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.leadId));
+  const [lead] = await db.select().from(leadsTable).where(
+    and(
+      eq(leadsTable.id, params.data.leadId),
+      eq(leadsTable.userId, req.userId!)
+    )
+  );
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     leadId: params.data.leadId,
     leadName: lead?.fullName ?? null,
     type: "note_added",
@@ -75,7 +87,12 @@ router.delete("/notes/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [note] = await db.delete(leadNotesTable).where(eq(leadNotesTable.id, params.data.id)).returning();
+  const [note] = await db.delete(leadNotesTable).where(
+    and(
+      eq(leadNotesTable.id, params.data.id),
+      eq(leadNotesTable.userId, req.userId!)
+    )
+  ).returning();
   if (!note) {
     res.status(404).json({ error: "Note not found" });
     return;

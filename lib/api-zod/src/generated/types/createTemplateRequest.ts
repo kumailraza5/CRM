@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CompleteFollowupBody {
-  rescheduleInDays?: number | null;
+export interface CreateTemplateRequest {
+  title: string;
+  category: string;
+  subject?: string | null;
+  content: string;
 }

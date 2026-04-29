@@ -5,9 +5,11 @@ import {
   timestamp,
   numeric,
   pgEnum,
+  integer,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { usersTable } from "./users";
 
 export const leadStatusEnum = pgEnum("lead_status", [
   "New Lead",
@@ -36,6 +38,9 @@ export const leadSourceEnum = pgEnum("lead_source", [
 
 export const leadsTable = pgTable("leads", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => usersTable.id)
+    .notNull(),
   fullName: text("full_name").notNull(),
   companyName: text("company_name").notNull(),
   linkedinUrl: text("linkedin_url"),

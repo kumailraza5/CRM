@@ -10,6 +10,7 @@ import {
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { leadsTable } from "./leads";
+import { usersTable } from "./users";
 
 export const paymentStatusEnum = pgEnum("payment_status", [
   "Paid",
@@ -19,6 +20,9 @@ export const paymentStatusEnum = pgEnum("payment_status", [
 
 export const dealsTable = pgTable("deals", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => usersTable.id)
+    .notNull(),
   leadId: integer("lead_id").references(() => leadsTable.id, {
     onDelete: "set null",
   }),

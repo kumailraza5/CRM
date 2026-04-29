@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, dealsTable, activitiesTable } from "@workspace/db";
 import {
   ListDealsResponse,
@@ -21,8 +21,10 @@ function mapDeal(d: typeof dealsTable.$inferSelect) {
   };
 }
 
-router.get("/deals", async (_req, res): Promise<void> => {
-  const deals = await db.select().from(dealsTable).orderBy(dealsTable.dealDate);
+router.get("/deals", async (req, res): Promise<void> => {
+  const deals = await db.select().from(dealsTable)
+    .where(eq(dealsTable.userId, req.userId!))
+    .orderBy(dealsTable.dealDate);
   res.json(ListDealsResponse.parse(deals.map(mapDeal)));
 });
 
@@ -36,6 +38,7 @@ router.post("/deals", async (req, res): Promise<void> => {
   const data = body.data as any;
 
   const [deal] = await db.insert(dealsTable).values({
+    userId: req.userId!,
     leadId: data.leadId ?? null,
     clientName: data.clientName,
     serviceSold: data.serviceSold,
@@ -47,6 +50,7 @@ router.post("/deals", async (req, res): Promise<void> => {
   }).returning();
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     leadId: data.leadId ?? null,
     leadName: data.clientName,
     type: "deal_won",
@@ -80,7 +84,15 @@ router.put("/deals/:id", async (req, res): Promise<void> => {
   if (data.paymentStatus !== undefined) updateData.paymentStatus = data.paymentStatus;
   if (data.notes !== undefined) updateData.notes = data.notes;
 
-  const [deal] = await db.update(dealsTable).set(updateData).where(eq(dealsTable.id, params.data.id)).returning();
+  const [deal] = await db.update(dealsTable)
+    .set(updateData)
+    .where(
+      and(
+        eq(dealsTable.id, params.data.id),
+        eq(dealsTable.userId, req.userId!)
+      )
+    )
+    .returning();
 
   if (!deal) {
     res.status(404).json({ error: "Deal not found" });
@@ -97,7 +109,14 @@ router.delete("/deals/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [deal] = await db.delete(dealsTable).where(eq(dealsTable.id, params.data.id)).returning();
+  const [deal] = await db.delete(dealsTable)
+    .where(
+      and(
+        eq(dealsTable.id, params.data.id),
+        eq(dealsTable.userId, req.userId!)
+      )
+    )
+    .returning();
   if (!deal) {
     res.status(404).json({ error: "Deal not found" });
     return;

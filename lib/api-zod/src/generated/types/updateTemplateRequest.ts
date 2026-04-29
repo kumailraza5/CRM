@@ -6,9 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateTemplateBody {
-  title: string;
-  category: string;
+export interface UpdateTemplateRequest {
+  title?: string;
+  category?: string;
   subject?: string | null;
-  content: string;
+  content?: string;
 }

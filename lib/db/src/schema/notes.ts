@@ -2,6 +2,7 @@ import { pgTable, text, serial, timestamp, integer, pgEnum } from "drizzle-orm/p
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { leadsTable } from "./leads";
+import { usersTable } from "./users";
 
 export const noteTypeEnum = pgEnum("note_type", [
   "added",
@@ -15,6 +16,9 @@ export const noteTypeEnum = pgEnum("note_type", [
 
 export const leadNotesTable = pgTable("lead_notes", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id")
+    .references(() => usersTable.id)
+    .notNull(),
   leadId: integer("lead_id")
     .notNull()
     .references(() => leadsTable.id, { onDelete: "cascade" }),

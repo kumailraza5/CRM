@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db, templatesTable } from "@workspace/db";
 import {
   ListTemplatesResponse,
@@ -20,8 +20,10 @@ function mapTemplate(t: typeof templatesTable.$inferSelect) {
   };
 }
 
-router.get("/templates", async (_req, res): Promise<void> => {
-  const templates = await db.select().from(templatesTable).orderBy(templatesTable.createdAt);
+router.get("/templates", async (req, res): Promise<void> => {
+  const templates = await db.select().from(templatesTable)
+    .where(eq(templatesTable.userId, req.userId!))
+    .orderBy(templatesTable.createdAt);
   res.json(ListTemplatesResponse.parse(templates.map(mapTemplate)));
 });
 
@@ -33,6 +35,7 @@ router.post("/templates", async (req, res): Promise<void> => {
   }
 
   const [template] = await db.insert(templatesTable).values({
+    userId: req.userId!,
     title: body.data.title,
     category: body.data.category,
     subject: body.data.subject ?? null,
@@ -62,7 +65,15 @@ router.put("/templates/:id", async (req, res): Promise<void> => {
   if (data.subject !== undefined) updateData.subject = data.subject;
   if (data.content !== undefined) updateData.content = data.content;
 
-  const [template] = await db.update(templatesTable).set(updateData).where(eq(templatesTable.id, params.data.id)).returning();
+  const [template] = await db.update(templatesTable)
+    .set(updateData)
+    .where(
+      and(
+        eq(templatesTable.id, params.data.id),
+        eq(templatesTable.userId, req.userId!)
+      )
+    )
+    .returning();
 
   if (!template) {
     res.status(404).json({ error: "Template not found" });
@@ -79,7 +90,14 @@ router.delete("/templates/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [t] = await db.delete(templatesTable).where(eq(templatesTable.id, params.data.id)).returning();
+  const [t] = await db.delete(templatesTable)
+    .where(
+      and(
+        eq(templatesTable.id, params.data.id),
+        eq(templatesTable.userId, req.userId!)
+      )
+    )
+    .returning();
   if (!t) {
     res.status(404).json({ error: "Template not found" });
     return;

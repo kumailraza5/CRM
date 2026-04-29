@@ -31,7 +31,7 @@ export interface Lead {
   updatedAt: string;
 }
 
-export interface CreateLeadBody {
+export interface CreateLeadRequest {
   fullName: string;
   companyName: string;
   linkedinUrl?: string | null;
@@ -50,7 +50,7 @@ export interface CreateLeadBody {
   nextFollowupDate?: string | null;
 }
 
-export interface UpdateLeadBody {
+export interface UpdateLeadRequest {
   fullName?: string;
   companyName?: string;
   linkedinUrl?: string | null;
@@ -76,7 +76,7 @@ export interface LeadScore {
   bestFollowupTime: string;
 }
 
-export interface CompleteFollowupBody {
+export interface CompleteFollowupRequest {
   rescheduleInDays?: number | null;
 }
 
@@ -88,7 +88,7 @@ export interface Note {
   createdAt: string;
 }
 
-export interface CreateNoteBody {
+export interface CreateNoteRequest {
   type: string;
   content: string;
 }
@@ -103,14 +103,14 @@ export interface Template {
   updatedAt: string;
 }
 
-export interface CreateTemplateBody {
+export interface CreateTemplateRequest {
   title: string;
   category: string;
   subject?: string | null;
   content: string;
 }
 
-export interface UpdateTemplateBody {
+export interface UpdateTemplateRequest {
   title?: string;
   category?: string;
   subject?: string | null;
@@ -131,7 +131,7 @@ export interface Deal {
   updatedAt: string;
 }
 
-export interface CreateDealBody {
+export interface CreateDealRequest {
   leadId?: number | null;
   clientName: string;
   serviceSold: string;
@@ -142,7 +142,7 @@ export interface CreateDealBody {
   notes?: string | null;
 }
 
-export interface UpdateDealBody {
+export interface UpdateDealRequest {
   leadId?: number | null;
   clientName?: string;
   serviceSold?: string;
@@ -200,6 +200,18 @@ export interface Activity {
   type: string;
   description: string;
   createdAt: string;
+}
+
+export interface AuthUser {
+  id: number;
+  name: string;
+  email: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  supabaseId: string;
 }
 
 export type ListLeadsParams = {

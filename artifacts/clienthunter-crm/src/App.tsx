@@ -9,6 +9,10 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
+import VerifyEmail from "@/pages/verify-email";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
+import AuthCallback from "@/pages/auth-callback";
 import Dashboard from "@/pages/dashboard";
 import Leads from "@/pages/leads";
 import LeadDetail from "@/pages/lead-detail";
@@ -27,6 +31,10 @@ function Router() {
       <Route path="/" component={Landing} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
+      <Route path="/auth/callback" component={AuthCallback} />
       
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/leads" component={Leads} />

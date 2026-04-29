@@ -7,12 +7,13 @@
  */
 
 export * from "./activity";
-export * from "./completeFollowupBody";
+export * from "./authUser";
+export * from "./completeFollowupRequest";
 export * from "./conversionReport";
-export * from "./createDealBody";
-export * from "./createLeadBody";
-export * from "./createNoteBody";
-export * from "./createTemplateBody";
+export * from "./createDealRequest";
+export * from "./createLeadRequest";
+export * from "./createNoteRequest";
+export * from "./createTemplateRequest";
 export * from "./dashboardSummary";
 export * from "./deal";
 export * from "./groupedCount";
@@ -23,8 +24,9 @@ export * from "./listLeadsParams";
 export * from "./monthlyData";
 export * from "./note";
 export * from "./pipelineStage";
+export * from "./registerRequest";
 export * from "./template";
-export * from "./updateDealBody";
-export * from "./updateLeadBody";
-export * from "./updateTemplateBody";
+export * from "./updateDealRequest";
+export * from "./updateLeadRequest";
+export * from "./updateTemplateRequest";
 export * from "./weeklyData";
