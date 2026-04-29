@@ -10,15 +10,22 @@ import { motion } from "framer-motion";
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { register } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      register(email || "alex@example.com", name || "Alex Developer");
-    }, 800);
+    setError(null);
+    try {
+      await register({ name, email, password } as any);
+    } catch (err: any) {
+      setError(err?.message || "Could not create account. Email might be already in use.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,6 +50,12 @@ export default function Register() {
             <h1 className="text-2xl font-bold tracking-tight mb-2">Start your hunt</h1>
             <p className="text-muted-foreground">Create your account to start managing leads</p>
           </div>
+
+          {error && (
+            <div className="mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -74,6 +87,8 @@ export default function Register() {
                 id="password" 
                 type="password" 
                 placeholder="••••••••" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 className="h-11"
                 minLength={8}

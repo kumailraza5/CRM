@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateDealBody {
+export interface CreateDealRequest {
   leadId?: number | null;
   clientName: string;
   serviceSold: string;

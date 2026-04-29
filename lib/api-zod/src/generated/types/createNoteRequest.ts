@@ -6,9 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface UpdateTemplateBody {
-  title?: string;
-  category?: string;
-  subject?: string | null;
-  content?: string;
+export interface CreateNoteRequest {
+  type: string;
+  content: string;
 }

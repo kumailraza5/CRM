@@ -6,7 +6,6 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateNoteBody {
-  type: string;
-  content: string;
+export interface CompleteFollowupRequest {
+  rescheduleInDays?: number | null;
 }

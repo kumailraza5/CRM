@@ -543,3 +543,21 @@ export const ListActivitiesResponseItem = zod.object({
   createdAt: zod.string(),
 });
 export const ListActivitiesResponse = zod.array(ListActivitiesResponseItem);
+
+/**
+ * @summary Register a new user
+ */
+export const RegisterBody = zod.object({
+  name: zod.string(),
+  email: zod.string(),
+  supabaseId: zod.string(),
+});
+
+/**
+ * @summary Get current logged in user
+ */
+export const GetCurrentUserResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+});

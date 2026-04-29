@@ -24,6 +24,8 @@ tags:
     description: Dashboard summaries
   - name: reports
     description: Analytics and reports
+  - name: auth
+    description: Authentication operations
 
 paths:
   /healthz:
@@ -96,7 +98,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateLeadBody"
+              $ref: "#/components/schemas/CreateLeadRequest"
       responses:
         "201":
           description: Lead created
@@ -138,7 +140,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateLeadBody"
+              $ref: "#/components/schemas/UpdateLeadRequest"
       responses:
         "200":
           description: Updated lead
@@ -241,7 +243,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CompleteFollowupBody"
+              $ref: "#/components/schemas/CompleteFollowupRequest"
       responses:
         "200":
           description: Updated lead
@@ -286,7 +288,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateNoteBody"
+              $ref: "#/components/schemas/CreateNoteRequest"
       responses:
         "201":
           description: Note created
@@ -334,7 +336,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateTemplateBody"
+              $ref: "#/components/schemas/CreateTemplateRequest"
       responses:
         "201":
           description: Template created
@@ -359,7 +361,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateTemplateBody"
+              $ref: "#/components/schemas/UpdateTemplateRequest"
       responses:
         "200":
           description: Updated template
@@ -405,7 +407,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CreateDealBody"
+              $ref: "#/components/schemas/CreateDealRequest"
       responses:
         "201":
           description: Deal created
@@ -430,7 +432,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/UpdateDealBody"
+              $ref: "#/components/schemas/UpdateDealRequest"
       responses:
         "200":
           description: Updated deal
@@ -571,6 +573,52 @@ paths:
                 items:
                   $ref: "#/components/schemas/Activity"
 
+  # --- AUTH ---
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Invalid input or user already exists
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/user:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current logged in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not logged in
+
 components:
   schemas:
     HealthStatus:
@@ -642,7 +690,7 @@ components:
         - createdAt
         - updatedAt
 
-    CreateLeadBody:
+    CreateLeadRequest:
       type: object
       properties:
         fullName:
@@ -695,7 +743,7 @@ components:
         - status
         - priority
 
-    UpdateLeadBody:
+    UpdateLeadRequest:
       type: object
       properties:
         fullName:
@@ -758,7 +806,7 @@ components:
           type: string
       required: [score, label, tips, bestFollowupTime]
 
-    CompleteFollowupBody:
+    CompleteFollowupRequest:
       type: object
       properties:
         rescheduleInDays:
@@ -781,7 +829,7 @@ components:
           type: string
       required: [id, leadId, type, content, createdAt]
 
-    CreateNoteBody:
+    CreateNoteRequest:
       type: object
       properties:
         type:
@@ -810,7 +858,7 @@ components:
           type: string
       required: [id, title, category, content, createdAt, updatedAt]
 
-    CreateTemplateBody:
+    CreateTemplateRequest:
       type: object
       properties:
         title:
@@ -824,7 +872,7 @@ components:
           type: string
       required: [title, category, content]
 
-    UpdateTemplateBody:
+    UpdateTemplateRequest:
       type: object
       properties:
         title:
@@ -866,7 +914,7 @@ components:
           type: string
       required: [id, clientName, serviceSold, amount, currency, dealDate, paymentStatus, createdAt, updatedAt]
 
-    CreateDealBody:
+    CreateDealRequest:
       type: object
       properties:
         leadId:
@@ -889,7 +937,7 @@ components:
           nullable: true
       required: [clientName, serviceSold, amount, currency, dealDate, paymentStatus]
 
-    UpdateDealBody:
+    UpdateDealRequest:
       type: object
       properties:
         leadId:
@@ -1010,3 +1058,26 @@ components:
         createdAt:
           type: string
       required: [id, type, description, createdAt]
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+      required: [id, name, email]
+
+    RegisterRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        supabaseId:
+          type: string
+      required: [name, email, supabaseId]
+

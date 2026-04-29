@@ -1,27 +1,44 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crosshair, Loader2 } from "lucide-react";
+import { Crosshair, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
-export default function Login() {
-  const [email, setEmail] = useState("");
+export default function ResetPassword() {
+  const [location, setLocation] = useLocation();
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
+    setLoading(true);
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      setLoading(false);
+      return;
+    }
+
     try {
-      await login({ email, password });
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      
+      toast({
+        title: "Password Reset",
+        description: "Your password has been successfully reset. You can now log in.",
+      });
+      
+      await supabase.auth.signOut(); // Force them to log in again with new password
+      setLocation("/login");
     } catch (err: any) {
-      setError(err?.message || "Invalid email or password");
+      setError(err.message || "Invalid or expired token");
     } finally {
       setLoading(false);
     }
@@ -46,43 +63,21 @@ export default function Login() {
           </div>
           
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome back to the hunt</h1>
-            <p className="text-muted-foreground">Sign in to access your command center</p>
+            <h1 className="text-2xl font-bold tracking-tight mb-2">Set new password</h1>
+            <p className="text-muted-foreground">
+              Please enter your new password below.
+            </p>
           </div>
 
           {error && (
-            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center flex flex-col items-center gap-2">
-              <span>{error}</span>
-              {error.toLowerCase().includes("email not confirmed") && (
-                <Link href={`/verify-email?email=${encodeURIComponent(email)}`}>
-                  <Button variant="outline" size="sm" className="mt-2 h-8">
-                    Verify Email Now
-                  </Button>
-                </Link>
-              )}
+            <div className="mb-6 p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm text-center">
+              {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email address</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="you@agency.com" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-11"
-              />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Link href="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-                  Forgot password?
-                </Link>
-              </div>
+              <Label htmlFor="password">New password</Label>
               <Input 
                 id="password" 
                 type="password" 
@@ -90,6 +85,21 @@ export default function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                minLength={8}
+                className="h-11"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm new password</Label>
+              <Input 
+                id="confirmPassword" 
+                type="password" 
+                placeholder="••••••••" 
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={8}
                 className="h-11"
               />
             </div>
@@ -98,20 +108,13 @@ export default function Login() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  Resetting...
                 </>
               ) : (
-                "Sign in"
+                "Reset password"
               )}
             </Button>
           </form>
-
-          <div className="mt-8 text-center text-sm text-muted-foreground">
-            Don't have an account?{" "}
-            <Link href="/register" className="font-medium text-primary hover:underline">
-              Create one now
-            </Link>
-          </div>
         </div>
       </motion.div>
     </div>

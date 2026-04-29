@@ -48,6 +48,13 @@ Thumbs.db
 .cache/
 .local/
 
+# Local Codex/app artifacts
+.codex/
+
+# Local generated backups and private helper scripts
+pnpm-lock.yaml.*
+lib/db/src/apply_schema.cjs
+
 # environment variables
 .env
 .env.*

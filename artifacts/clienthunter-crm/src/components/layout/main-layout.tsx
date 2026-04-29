@@ -123,8 +123,16 @@ function MainLayoutInner({ children }: { children: ReactNode }) {
 }
 
 export function MainLayout({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Crosshair className="w-8 h-8 text-primary animate-pulse" />
+      </div>
+    );
+  }
 
   if (!user) {
     setLocation("/login");

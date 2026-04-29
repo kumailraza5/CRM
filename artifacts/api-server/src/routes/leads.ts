@@ -69,7 +69,9 @@ router.get("/leads", async (req, res): Promise<void> => {
     );
   }
 
-  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  conditions.push(eq(leadsTable.userId, req.userId!));
+
+  const where = and(...conditions);
   const leads = await db.select().from(leadsTable).where(where).orderBy(sql`${leadsTable.createdAt} DESC`);
   res.json(ListLeadsResponse.parse(leads.map(mapLead)));
 });
@@ -85,6 +87,7 @@ router.post("/leads", async (req, res): Promise<void> => {
   const data = parsed.data as any;
 
   const [lead] = await db.insert(leadsTable).values({
+    userId: req.userId!,
     fullName: data.fullName,
     companyName: data.companyName,
     linkedinUrl: data.linkedinUrl ?? null,
@@ -105,6 +108,7 @@ router.post("/leads", async (req, res): Promise<void> => {
 
   // Log activity
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     leadId: lead.id,
     leadName: lead.fullName,
     type: "lead_created",
@@ -113,6 +117,7 @@ router.post("/leads", async (req, res): Promise<void> => {
 
   // Auto-add timeline note
   await db.insert(leadNotesTable).values({
+    userId: req.userId!,
     leadId: lead.id,
     type: "added",
     content: `Lead added from ${lead.leadSource ?? "LinkedIn"}`,
@@ -129,7 +134,12 @@ router.get("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
+  const [lead] = await db.select().from(leadsTable).where(
+    and(
+      eq(leadsTable.id, params.data.id),
+      eq(leadsTable.userId, req.userId!)
+    )
+  );
   if (!lead) {
     res.status(404).json({ error: "Lead not found" });
     return;
@@ -172,7 +182,15 @@ router.put("/leads/:id", async (req, res): Promise<void> => {
   if (data.lastContactDate !== undefined) updateData.lastContactDate = data.lastContactDate;
   if (data.nextFollowupDate !== undefined) updateData.nextFollowupDate = data.nextFollowupDate;
 
-  const [lead] = await db.update(leadsTable).set(updateData).where(eq(leadsTable.id, params.data.id)).returning();
+  const [lead] = await db.update(leadsTable)
+    .set(updateData)
+    .where(
+      and(
+        eq(leadsTable.id, params.data.id),
+        eq(leadsTable.userId, req.userId!)
+      )
+    )
+    .returning();
 
   if (!lead) {
     res.status(404).json({ error: "Lead not found" });
@@ -182,6 +200,7 @@ router.put("/leads/:id", async (req, res): Promise<void> => {
   // Log status change activity
   if (data.status) {
     await db.insert(activitiesTable).values({
+      userId: req.userId!,
       leadId: lead.id,
       leadName: lead.fullName,
       type: "status_changed",
@@ -200,7 +219,12 @@ router.delete("/leads/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [lead] = await db.delete(leadsTable).where(eq(leadsTable.id, params.data.id)).returning();
+  const [lead] = await db.delete(leadsTable).where(
+    and(
+      eq(leadsTable.id, params.data.id),
+      eq(leadsTable.userId, req.userId!)
+    )
+  ).returning();
   if (!lead) {
     res.status(404).json({ error: "Lead not found" });
     return;
@@ -217,7 +241,12 @@ router.get("/leads/:id/score", async (req, res): Promise<void> => {
     return;
   }
 
-  const [lead] = await db.select().from(leadsTable).where(eq(leadsTable.id, params.data.id));
+  const [lead] = await db.select().from(leadsTable).where(
+    and(
+      eq(leadsTable.id, params.data.id),
+      eq(leadsTable.userId, req.userId!)
+    )
+  );
   if (!lead) {
     res.status(404).json({ error: "Lead not found" });
     return;
@@ -305,16 +334,22 @@ router.get("/leads/:id/score", async (req, res): Promise<void> => {
 });
 
 // Follow-ups
-router.get("/followups/today", async (_req, res): Promise<void> => {
+router.get("/followups/today", async (req, res): Promise<void> => {
   const today = todayStr();
-  const leads = await db.select().from(leadsTable).where(eq(leadsTable.nextFollowupDate, today));
+  const leads = await db.select().from(leadsTable).where(
+    and(
+      eq(leadsTable.nextFollowupDate, today),
+      eq(leadsTable.userId, req.userId!)
+    )
+  );
   res.json(leads.map(mapLead));
 });
 
-router.get("/followups/overdue", async (_req, res): Promise<void> => {
+router.get("/followups/overdue", async (req, res): Promise<void> => {
   const today = todayStr();
   const leads = await db.select().from(leadsTable)
     .where(and(
+      eq(leadsTable.userId, req.userId!),
       sql`${leadsTable.nextFollowupDate} IS NOT NULL`,
       sql`${leadsTable.nextFollowupDate} < ${today}`,
       sql`${leadsTable.status} NOT IN ('Won', 'Lost')`
@@ -322,11 +357,12 @@ router.get("/followups/overdue", async (_req, res): Promise<void> => {
   res.json(leads.map(mapLead));
 });
 
-router.get("/followups/upcoming", async (_req, res): Promise<void> => {
+router.get("/followups/upcoming", async (req, res): Promise<void> => {
   const today = todayStr();
   const nextWeek = addDays(today, 7);
   const leads = await db.select().from(leadsTable)
     .where(and(
+      eq(leadsTable.userId, req.userId!),
       sql`${leadsTable.nextFollowupDate} IS NOT NULL`,
       sql`${leadsTable.nextFollowupDate} > ${today}`,
       sql`${leadsTable.nextFollowupDate} <= ${nextWeek}`
@@ -357,7 +393,12 @@ router.post("/leads/:id/followup/complete", async (req, res): Promise<void> => {
       lastContactDate: today,
       nextFollowupDate: nextFollowupDate ?? undefined,
     })
-    .where(eq(leadsTable.id, params.data.id))
+    .where(
+      and(
+        eq(leadsTable.id, params.data.id),
+        eq(leadsTable.userId, req.userId!)
+      )
+    )
     .returning();
 
   if (!lead) {
@@ -366,12 +407,14 @@ router.post("/leads/:id/followup/complete", async (req, res): Promise<void> => {
   }
 
   await db.insert(leadNotesTable).values({
+    userId: req.userId!,
     leadId: lead.id,
     type: "follow-up",
     content: `Follow-up completed${nextFollowupDate ? `, rescheduled for ${nextFollowupDate}` : ""}`,
   });
 
   await db.insert(activitiesTable).values({
+    userId: req.userId!,
     leadId: lead.id,
     leadName: lead.fullName,
     type: "followup_completed",

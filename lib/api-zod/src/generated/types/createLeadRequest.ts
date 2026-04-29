@@ -6,7 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface CreateLeadBody {
+export interface CreateLeadRequest {
   fullName: string;
   companyName: string;
   linkedinUrl?: string | null;

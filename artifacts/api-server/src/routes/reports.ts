@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { sql } from "drizzle-orm";
+import { sql, and, eq } from "drizzle-orm";
 import { db, leadsTable, dealsTable } from "@workspace/db";
 import {
   GetConversionReportResponse,
@@ -11,14 +11,15 @@ import {
 const router: IRouter = Router();
 
 // Conversion report
-router.get("/reports/conversion", async (_req, res): Promise<void> => {
+router.get("/reports/conversion", async (req, res): Promise<void> => {
   const [won] = await db.select({ count: sql<number>`count(*)::int` }).from(leadsTable)
-    .where(sql`${leadsTable.status} = 'Won'`);
+    .where(and(eq(leadsTable.userId, req.userId!), sql`${leadsTable.status} = 'Won'`));
   const [lost] = await db.select({ count: sql<number>`count(*)::int` }).from(leadsTable)
-    .where(sql`${leadsTable.status} = 'Lost'`);
+    .where(and(eq(leadsTable.userId, req.userId!), sql`${leadsTable.status} = 'Lost'`));
   const [inProgress] = await db.select({ count: sql<number>`count(*)::int` }).from(leadsTable)
-    .where(sql`${leadsTable.status} NOT IN ('Won', 'Lost')`);
-  const [revenueResult] = await db.select({ total: sql<number>`COALESCE(SUM(amount::numeric), 0)` }).from(dealsTable);
+    .where(and(eq(leadsTable.userId, req.userId!), sql`${leadsTable.status} NOT IN ('Won', 'Lost')`));
+  const [revenueResult] = await db.select({ total: sql<number>`COALESCE(SUM(amount::numeric), 0)` }).from(dealsTable)
+    .where(eq(dealsTable.userId, req.userId!));
 
   const total = won.count + lost.count;
   const conversionRate = total > 0 ? Math.round((won.count / total) * 100) : 0;
@@ -33,13 +34,14 @@ router.get("/reports/conversion", async (_req, res): Promise<void> => {
 });
 
 // Leads by country
-router.get("/reports/by-country", async (_req, res): Promise<void> => {
+router.get("/reports/by-country", async (req, res): Promise<void> => {
   const results = await db
     .select({
       name: sql<string>`COALESCE(${leadsTable.country}, 'Unknown')`,
       count: sql<number>`count(*)::int`,
     })
     .from(leadsTable)
+    .where(eq(leadsTable.userId, req.userId!))
     .groupBy(leadsTable.country)
     .orderBy(sql`count(*) DESC`)
     .limit(10);
@@ -50,7 +52,10 @@ router.get("/reports/by-country", async (_req, res): Promise<void> => {
       const [rev] = await db.select({ total: sql<number>`COALESCE(SUM(d.amount::numeric), 0)` })
         .from(dealsTable)
         .leftJoin(leadsTable, sql`${leadsTable.id} = ${dealsTable.leadId}`)
-        .where(sql`COALESCE(${leadsTable.country}, 'Unknown') = ${r.name}`);
+        .where(and(
+          eq(leadsTable.userId, req.userId!),
+          sql`COALESCE(${leadsTable.country}, 'Unknown') = ${r.name}`
+        ));
       return { name: r.name, count: r.count, revenue: Number(rev.total) };
     })
   );
@@ -59,13 +64,14 @@ router.get("/reports/by-country", async (_req, res): Promise<void> => {
 });
 
 // Leads by industry
-router.get("/reports/by-industry", async (_req, res): Promise<void> => {
+router.get("/reports/by-industry", async (req, res): Promise<void> => {
   const results = await db
     .select({
       name: sql<string>`COALESCE(${leadsTable.industry}, 'Unknown')`,
       count: sql<number>`count(*)::int`,
     })
     .from(leadsTable)
+    .where(eq(leadsTable.userId, req.userId!))
     .groupBy(leadsTable.industry)
     .orderBy(sql`count(*) DESC`)
     .limit(10);
@@ -75,7 +81,10 @@ router.get("/reports/by-industry", async (_req, res): Promise<void> => {
       const [rev] = await db.select({ total: sql<number>`COALESCE(SUM(d.amount::numeric), 0)` })
         .from(dealsTable)
         .leftJoin(leadsTable, sql`${leadsTable.id} = ${dealsTable.leadId}`)
-        .where(sql`COALESCE(${leadsTable.industry}, 'Unknown') = ${r.name}`);
+        .where(and(
+          eq(leadsTable.userId, req.userId!),
+          sql`COALESCE(${leadsTable.industry}, 'Unknown') = ${r.name}`
+        ));
       return { name: r.name, count: r.count, revenue: Number(rev.total) };
     })
   );
@@ -84,7 +93,7 @@ router.get("/reports/by-industry", async (_req, res): Promise<void> => {
 });
 
 // Weekly leads
-router.get("/reports/weekly", async (_req, res): Promise<void> => {
+router.get("/reports/weekly", async (req, res): Promise<void> => {
   const weeks: Array<{ week: string; count: number }> = [];
 
   for (let i = 7; i >= 0; i--) {
@@ -100,7 +109,10 @@ router.get("/reports/weekly", async (_req, res): Promise<void> => {
 
     const [result] = await db.select({ count: sql<number>`count(*)::int` })
       .from(leadsTable)
-      .where(sql`${leadsTable.createdAt} >= ${startStr}::timestamptz AND ${leadsTable.createdAt} <= ${endStr}::timestamptz`);
+      .where(and(
+        eq(leadsTable.userId, req.userId!),
+        sql`${leadsTable.createdAt} >= ${startStr}::timestamptz AND ${leadsTable.createdAt} <= ${endStr}::timestamptz`
+      ));
 
     const label = `${weekStart.toLocaleString("default", { month: "short" })} ${weekStart.getDate()}`;
     weeks.push({ week: label, count: result.count });
