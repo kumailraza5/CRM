@@ -10,13 +10,9 @@ import {
 import type { AuthUser, RegisterRequest } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
+import { getAppUrl } from "../lib/app-url";
 
 type LoginData = { email: string; password?: string };
-
-function getAppRedirectUrl(path: string) {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return `${window.location.origin}${basePath}${path}`;
-}
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -102,7 +98,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       email: data.email,
       password: (data as any).password,
       options: {
-        emailRedirectTo: getAppRedirectUrl("/auth/callback"),
+        emailRedirectTo: getAppUrl("/auth/callback"),
         data: {
           name: data.name
         }
