@@ -6,6 +6,7 @@ import { logger } from "./lib/logger";
 import { pool } from "@workspace/db";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
 
 const app: Express = express();
 
@@ -40,22 +41,26 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 
-if (process.env.NODE_ENV === "production") {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  // Point to the frontend build directory relative to this file's location in dist
-  const publicPath = path.resolve(__dirname, "../../clienthunter-crm/dist/public");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const publicPath = path.resolve(__dirname, "../../clienthunter-crm/dist/public");
+const indexPath = path.resolve(publicPath, "index.html");
 
-  logger.info({ publicPath, __dirname }, "Serving static files");
-
+if (existsSync(indexPath)) {
+  logger.info({ publicPath }, "Serving static frontend files");
   app.use(express.static(publicPath));
 
   app.use((req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
-    res.sendFile(path.resolve(publicPath, "index.html"));
+    res.sendFile(indexPath);
   });
+} else if (process.env.NODE_ENV === "production") {
+  logger.warn(
+    { publicPath, indexPath },
+    "Frontend build not found; only API routes will be served",
+  );
 }
 
 export default app;
