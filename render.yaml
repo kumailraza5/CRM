@@ -2,7 +2,7 @@ services:
   - type: web
     name: lead-manager-pro
     runtime: node
-    buildCommand: pnpm install && pnpm run build
+    buildCommand: pnpm install --prod=false && pnpm run build
     startCommand: pnpm --filter @workspace/api-server start
     envVars:
       - key: NODE_ENV
