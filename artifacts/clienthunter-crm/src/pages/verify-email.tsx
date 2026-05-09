@@ -5,11 +5,7 @@ import { Crosshair, Loader2, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
-
-function getAppRedirectUrl(path: string) {
-  const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return `${window.location.origin}${basePath}${path}`;
-}
+import { getAppUrl } from "@/lib/app-url";
 
 export default function VerifyEmail() {
   const searchParams = new URLSearchParams(window.location.search);
@@ -28,7 +24,7 @@ export default function VerifyEmail() {
         type: 'signup',
         email,
         options: {
-          emailRedirectTo: getAppRedirectUrl("/auth/callback"),
+          emailRedirectTo: getAppUrl("/auth/callback"),
         },
       });
       

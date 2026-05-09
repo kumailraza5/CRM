@@ -1,19 +1,78 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Crosshair, Loader2, CheckCircle2 } from "lucide-react";
+import { Crosshair, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 
 export default function ResetPassword() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
+  const [invalidLink, setInvalidLink] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function prepareResetSession() {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const queryParams = new URLSearchParams(window.location.search);
+      const linkError = hashParams.get("error_description") || hashParams.get("error");
+
+      if (linkError) {
+        setError(linkError);
+        setInvalidLink(true);
+        return;
+      }
+
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (error) throw error;
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      const code = queryParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) throw error;
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw error;
+
+      if (!session) {
+        setError("Reset link is invalid or expired. Please request a new password reset link.");
+        setInvalidLink(true);
+      }
+    }
+
+    prepareResetSession()
+      .catch((err: any) => {
+        setError(err?.message || "Reset link is invalid or expired.");
+        setInvalidLink(true);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setCheckingLink(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,7 +124,7 @@ export default function ResetPassword() {
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold tracking-tight mb-2">Set new password</h1>
             <p className="text-muted-foreground">
-              Please enter your new password below.
+              {checkingLink ? "Checking your reset link..." : "Please enter your new password below."}
             </p>
           </div>
 
@@ -104,7 +163,7 @@ export default function ResetPassword() {
               />
             </div>
             
-            <Button type="submit" className="w-full h-11 text-base mt-6" disabled={loading}>
+            <Button type="submit" className="w-full h-11 text-base mt-6" disabled={loading || checkingLink || invalidLink}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

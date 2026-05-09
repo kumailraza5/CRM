@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Crosshair, Loader2, ArrowLeft, MailCheck } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/lib/supabase";
+import { getAppUrl } from "@/lib/app-url";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -21,7 +22,7 @@ export default function ForgotPassword() {
 
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: getAppUrl("/reset-password"),
       });
       if (error) throw error;
       setSuccess(true);
