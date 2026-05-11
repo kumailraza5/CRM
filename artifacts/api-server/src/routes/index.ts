@@ -7,6 +7,9 @@ import templatesRouter from "./templates";
 import dealsRouter from "./deals";
 import dashboardRouter from "./dashboard";
 import reportsRouter from "./reports";
+import followupsRouter from "./followups";
+import notificationsRouter from "./notifications";
+import aiSuggestionsRouter from "./ai-suggestions";
 
 import { isAuthenticated } from "../middleware/auth";
 
@@ -23,5 +26,8 @@ router.use(templatesRouter);
 router.use(dealsRouter);
 router.use(dashboardRouter);
 router.use(reportsRouter);
+router.use(followupsRouter);
+router.use(notificationsRouter);
+router.use(aiSuggestionsRouter);
 
 export default router;

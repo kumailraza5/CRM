@@ -6,7 +6,6 @@ import {
   useUpdateLead, 
   useGetLeadScore, 
   useListNotes, 
-  useCreateNote,
   getGetLeadQueryKey,
   getGetLeadScoreQueryKey,
   getListNotesQueryKey
@@ -16,11 +15,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge, PriorityBadge } from "@/components/ui/badges";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Globe, Linkedin, Mail, Phone, Building, MapPin, Briefcase, Plus, Loader2, Zap, Clock, CheckCircle2, MessageSquare, CalendarClock } from "lucide-react";
+import { ArrowLeft, Globe, Linkedin, Mail, Phone, Building, MapPin, Briefcase, Plus, Loader2, Zap, Clock, CheckCircle2, MessageSquare, CalendarClock, AlertTriangle, Edit } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { EnhancedActivityTimeline } from "@/components/followups/enhanced-activity-timeline";
+import { FollowupScheduler } from "@/components/followups/followup-scheduler";
 
 export default function LeadDetail() {
   const params = useParams();
@@ -38,11 +38,7 @@ export default function LeadDetail() {
     query: { enabled: !!leadId, queryKey: getListNotesQueryKey(leadId) }
   });
 
-  const [newNoteContent, setNewNoteContent] = useState("");
-  const [noteType, setNoteType] = useState("added");
-  
   const updateLead = useUpdateLead();
-  const createNote = useCreateNote();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,20 +52,6 @@ export default function LeadDetail() {
     }
   };
 
-  const handleAddNote = async () => {
-    if (!newNoteContent.trim()) return;
-    try {
-      await createNote.mutateAsync({
-        leadId,
-        data: { type: noteType, content: newNoteContent }
-      });
-      queryClient.invalidateQueries({ queryKey: getListNotesQueryKey(leadId) });
-      setNewNoteContent("");
-      toast({ title: "Note added" });
-    } catch (err) {
-      toast({ title: "Failed to add note", variant: "destructive" });
-    }
-  };
 
   if (loadingLead) {
     return (
@@ -144,112 +126,165 @@ export default function LeadDetail() {
               </CardContent>
             </Card>
 
-            {/* Profile Info */}
+            {/* Profile Info with Data Enrichment Prompts */}
             <Card>
               <CardHeader>
-                <CardTitle>Profile Details</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Profile Details</CardTitle>
+                  <Button variant="outline" size="sm">
+                    <Edit className="w-4 h-4 mr-2" />
+                    Quick Edit
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-sm">
                       <Mail className="w-4 h-4 text-muted-foreground" />
-                      {lead.email ? <a href={`mailto:${lead.email}`} className="text-primary hover:underline">{lead.email}</a> : <span className="text-muted-foreground">No email</span>}
+                      {lead.email ? (
+                        <a href={`mailto:${lead.email}`} className="text-primary hover:underline">{lead.email}</a>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">No email</span>
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Missing
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Phone className="w-4 h-4 text-muted-foreground" />
-                      {lead.phone || <span className="text-muted-foreground">No phone</span>}
+                      {lead.phone || (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">No phone</span>
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            Optional
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Linkedin className="w-4 h-4 text-muted-foreground" />
-                      {lead.linkedinUrl ? <a href={lead.linkedinUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">LinkedIn Profile</a> : <span className="text-muted-foreground">No LinkedIn</span>}
+                      {lead.linkedinUrl ? (
+                        <a href={lead.linkedinUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">LinkedIn Profile</a>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">No LinkedIn</span>
+                          <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Required
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Globe className="w-4 h-4 text-muted-foreground" />
-                      {lead.websiteUrl ? <a href={lead.websiteUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">Website</a> : <span className="text-muted-foreground">No website</span>}
+                      {lead.websiteUrl ? (
+                        <a href={lead.websiteUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">Website</a>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">No website</span>
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Missing
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-4">
                     <div className="flex items-center gap-3 text-sm">
                       <Building className="w-4 h-4 text-muted-foreground" />
-                      {lead.companySize ? `${lead.companySize} employees` : <span className="text-muted-foreground">Unknown size</span>}
+                      {lead.companySize ? (
+                        <span>{lead.companySize} employees</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Unknown size</span>
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            Optional
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Briefcase className="w-4 h-4 text-muted-foreground" />
-                      {lead.industry || <span className="text-muted-foreground">Unknown industry</span>}
+                      {lead.industry || (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Unknown industry</span>
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Missing
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <MapPin className="w-4 h-4 text-muted-foreground" />
-                      {lead.country || <span className="text-muted-foreground">Unknown location</span>}
+                      {lead.country || (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">Unknown location</span>
+                          <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                            Optional
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      {lead.estimatedBudget ? (
+                        <span className="font-medium">${lead.estimatedBudget}</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground">No budget</span>
+                          <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                            <AlertTriangle className="w-3 h-3 mr-1" />
+                            Missing
+                          </Badge>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Notes Timeline */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Activity Timeline</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex gap-2">
-                  <Textarea 
-                    placeholder="Add a note or log an activity..." 
-                    value={newNoteContent}
-                    onChange={e => setNewNoteContent(e.target.value)}
-                    className="min-h-[80px] resize-none"
-                  />
-                  <div className="flex flex-col gap-2 w-32 shrink-0">
-                    <select 
-                      className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      value={noteType}
-                      onChange={e => setNoteType(e.target.value)}
-                    >
-                      <option value="added">Note</option>
-                      <option value="messaged">Message</option>
-                      <option value="replied">Reply</option>
-                      <option value="meeting">Meeting</option>
-                    </select>
-                    <Button className="w-full" onClick={handleAddNote} disabled={createNote.isPending || !newNoteContent.trim()}>
-                      {createNote.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Post"}
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="space-y-6 mt-6">
-                  {loadingNotes ? (
-                    <Skeleton className="h-20 w-full" />
-                  ) : notes?.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">No activity logged yet.</p>
-                  ) : (
-                    notes?.map((note, i) => (
-                      <div key={note.id} className="flex gap-4 relative">
-                        {i !== notes.length - 1 && (
-                          <div className="absolute top-10 bottom-[-24px] left-5 w-px bg-border z-0"></div>
-                        )}
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0 z-10 border border-background">
-                          {note.type === "added" ? <Plus className="w-4 h-4" /> :
-                           note.type === "messaged" ? <MessageSquare className="w-4 h-4 text-blue-500" /> :
-                           note.type === "replied" ? <MessageSquare className="w-4 h-4 text-amber-500" /> :
-                           note.type === "meeting" ? <CalendarClock className="w-4 h-4 text-primary" /> :
-                           <Clock className="w-4 h-4" />}
-                        </div>
-                        <div className="bg-muted/30 p-4 rounded-xl flex-1 border">
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="text-sm font-semibold capitalize">{note.type}</span>
-                            <span className="text-xs text-muted-foreground">
-                              {format(parseISO(note.createdAt), "MMM d, h:mm a")}
-                            </span>
-                          </div>
-                          <p className="text-sm">{note.content}</p>
+                
+                {/* Data Enrichment Actions */}
+                {(!lead.email || !lead.linkedinUrl || !lead.websiteUrl || !lead.industry || !lead.estimatedBudget) && (
+                  <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5" />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-amber-800 dark:text-amber-200 mb-2">Complete Lead Profile</h4>
+                        <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                          Missing key information reduces lead quality score and limits outreach options.
+                        </p>
+                        <div className="flex gap-2">
+                          <FollowupScheduler 
+                            leadId={leadId} 
+                            leadName={lead.fullName}
+                            trigger={
+                              <Button size="sm" variant="outline">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Schedule Data Research
+                              </Button>
+                            }
+                          />
+                          <Button size="sm" variant="outline" onClick={() => handleStatusChange("Profile Checked")}>
+                            Mark as Checked
+                          </Button>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {/* Enhanced Activity Timeline */}
+            <EnhancedActivityTimeline 
+              leadId={leadId} 
+              leadName={lead.fullName} 
+            />
           </div>
 
           <div className="space-y-6">

@@ -4,3 +4,5 @@ export * from "./templates";
 export * from "./deals";
 export * from "./activities";
 export * from "./users";
+export * from "./followups";
+export * from "./notifications";
