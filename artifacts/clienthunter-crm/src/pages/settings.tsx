@@ -17,12 +17,26 @@ export default function Settings() {
   
   const [loading, setLoading] = useState(false);
 
+  const [notifications, setNotifications] = useState({
+    dailySummary: true,
+    activityAlerts: true,
+    reminders: false
+  });
+
   const handleSave = () => {
     setLoading(true);
     setTimeout(() => {
       setLoading(false);
       toast({ title: "Settings saved successfully" });
     }, 600);
+  };
+
+  const toggleNotification = (key: keyof typeof notifications) => {
+    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+    toast({ 
+      title: `${key === 'reminders' ? 'Follow-up Reminders' : key === 'dailySummary' ? 'Daily Summary' : 'Lead Activity Alerts'} ${!notifications[key] ? 'enabled' : 'disabled'}`,
+      description: "Preference updated successfully."
+    });
   };
 
   return (
@@ -35,7 +49,7 @@ export default function Settings() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Profile Profile</CardTitle>
+            <CardTitle>Profile</CardTitle>
             <CardDescription>Update your personal information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -97,21 +111,30 @@ export default function Settings() {
                 <Label className="text-base font-medium">Daily Summary Email</Label>
                 <p className="text-sm text-muted-foreground">Receive a morning digest of tasks and follow-ups due.</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={notifications.dailySummary} 
+                onCheckedChange={() => toggleNotification('dailySummary')} 
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base font-medium">Lead Activity Alerts</Label>
                 <p className="text-sm text-muted-foreground">Notify me when a lead's status changes automatically.</p>
               </div>
-              <Switch defaultChecked />
+              <Switch 
+                checked={notifications.activityAlerts} 
+                onCheckedChange={() => toggleNotification('activityAlerts')} 
+              />
             </div>
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base font-medium">Follow-up Reminders</Label>
                 <p className="text-sm text-muted-foreground">Browser notifications for overdue follow-ups.</p>
               </div>
-              <Switch />
+              <Switch 
+                checked={notifications.reminders} 
+                onCheckedChange={() => toggleNotification('reminders')} 
+              />
             </div>
           </CardContent>
         </Card>
