@@ -17,10 +17,20 @@ export default function Settings() {
   
   const [loading, setLoading] = useState(false);
 
-  const [notifications, setNotifications] = useState({
-    dailySummary: true,
-    activityAlerts: true,
-    reminders: false
+  const [notifications, setNotifications] = useState(() => {
+    const saved = localStorage.getItem("notification_settings");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error("Failed to parse notification settings", e);
+      }
+    }
+    return {
+      dailySummary: true,
+      activityAlerts: true,
+      reminders: false
+    };
   });
 
   const handleSave = () => {
@@ -32,10 +42,13 @@ export default function Settings() {
   };
 
   const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+    const newSettings = { ...notifications, [key]: !notifications[key] };
+    setNotifications(newSettings);
+    localStorage.setItem("notification_settings", JSON.stringify(newSettings));
+    
     toast({ 
       title: `${key === 'reminders' ? 'Follow-up Reminders' : key === 'dailySummary' ? 'Daily Summary' : 'Lead Activity Alerts'} ${!notifications[key] ? 'enabled' : 'disabled'}`,
-      description: "Preference updated successfully."
+      description: "Preference saved and persisted."
     });
   };
 
