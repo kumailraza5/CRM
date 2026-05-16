@@ -58,7 +58,7 @@ router.post("/notifications/:id/read", async (req, res): Promise<void> => {
   res.json({
     ...notification,
     createdAt: notification.createdAt.toISOString(),
-    readAt: notification.readAt.toISOString(),
+    readAt: notification.readAt!.toISOString(),
     expiresAt: notification.expiresAt?.toISOString(),
   });
 });

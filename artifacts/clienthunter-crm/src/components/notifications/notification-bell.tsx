@@ -137,7 +137,7 @@ export function NotificationBell() {
   };
 
   const unreadCount = counts?.unread || 0;
-  const hasUrgent = counts?.urgent > 0 || counts?.overdueFollowups > 0;
+  const hasUrgent = (counts?.urgent ?? 0) > 0 || (counts?.overdueFollowups ?? 0) > 0;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>

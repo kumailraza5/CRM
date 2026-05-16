@@ -130,11 +130,11 @@ router.post("/followups/:id/complete", async (req, res): Promise<void> => {
   const { notes, rescheduleInDays } = req.body;
 
   try {
-    const [followup] = await db.update(followupsTable)
+    const [updatedFollowup] = await db.update(followupsTable)
       .set({
         status: "completed",
         completedAt: nowUTC(),
-        notes: notes || followup.notes,
+        notes: notes,
       })
       .where(and(
         eq(followupsTable.id, followupId),
@@ -142,7 +142,7 @@ router.post("/followups/:id/complete", async (req, res): Promise<void> => {
       ))
       .returning();
 
-    if (!followup) {
+    if (!updatedFollowup) {
       res.status(404).json({ error: "Follow-up not found" });
       return;
     }
@@ -150,15 +150,15 @@ router.post("/followups/:id/complete", async (req, res): Promise<void> => {
     // Update lead's last contact date
     await db.update(leadsTable)
       .set({ lastContactDate: todayStr() })
-      .where(eq(leadsTable.id, followup.leadId));
+      .where(eq(leadsTable.id, updatedFollowup.leadId));
 
     // Log activity
     await db.insert(activitiesTable).values({
       userId: req.userId!,
-      leadId: followup.leadId,
-      leadName: (await db.select().from(leadsTable).where(eq(leadsTable.id, followup.leadId)))[0]?.fullName || "Unknown",
+      leadId: updatedFollowup.leadId,
+      leadName: (await db.select().from(leadsTable).where(eq(leadsTable.id, updatedFollowup.leadId)))[0]?.fullName || "Unknown",
       type: "followup_completed",
-      description: `Completed: ${followup.title}`,
+      description: `Completed: ${updatedFollowup.title}`,
     });
 
     // Auto-reschedule if requested
@@ -168,11 +168,11 @@ router.post("/followups/:id/complete", async (req, res): Promise<void> => {
 
       await db.insert(followupsTable).values({
         userId: req.userId!,
-        leadId: followup.leadId,
-        type: followup.type,
-        title: `Follow-up: ${followup.title}`,
-        description: followup.description,
-        priority: followup.priority,
+        leadId: updatedFollowup.leadId,
+        type: updatedFollowup.type,
+        title: `Follow-up: ${updatedFollowup.title}`,
+        description: updatedFollowup.description,
+        priority: updatedFollowup.priority,
         scheduledFor: nextDate,
         reminderAt: addHours(nextDate, -1),
         notes: `Auto-rescheduled from completed follow-up`,
@@ -181,16 +181,16 @@ router.post("/followups/:id/complete", async (req, res): Promise<void> => {
       // Update lead's next follow-up date
       await db.update(leadsTable)
         .set({ nextFollowupDate: nextDate.toISOString().split('T')[0] })
-        .where(eq(leadsTable.id, followup.leadId));
+        .where(eq(leadsTable.id, updatedFollowup.leadId));
     }
 
     res.json({
-      ...followup,
-      scheduledFor: followup.scheduledFor.toISOString(),
-      reminderAt: followup.reminderAt?.toISOString(),
-      completedAt: followup.completedAt.toISOString(),
-      createdAt: followup.createdAt.toISOString(),
-      updatedAt: followup.updatedAt.toISOString(),
+      ...updatedFollowup,
+      scheduledFor: updatedFollowup.scheduledFor.toISOString(),
+      reminderAt: updatedFollowup.reminderAt?.toISOString(),
+      completedAt: updatedFollowup.completedAt!.toISOString(),
+      createdAt: updatedFollowup.createdAt.toISOString(),
+      updatedAt: updatedFollowup.updatedAt.toISOString(),
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to complete follow-up" });
