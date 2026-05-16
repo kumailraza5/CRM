@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { EnhancedActivityTimeline } from "@/components/followups/enhanced-activity-timeline";
 import { FollowupScheduler } from "@/components/followups/followup-scheduler";
+import { LeadEditModal } from "@/components/leads/lead-edit-modal";
 
 export default function LeadDetail() {
   const params = useParams();
@@ -131,10 +132,15 @@ export default function LeadDetail() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <CardTitle>Profile Details</CardTitle>
-                  <Button variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Quick Edit
-                  </Button>
+                  <LeadEditModal 
+                    lead={lead} 
+                    trigger={
+                      <Button variant="outline" size="sm">
+                        <Edit className="w-4 h-4 mr-2" />
+                        Quick Edit
+                      </Button>
+                    }
+                  />
                 </div>
               </CardHeader>
               <CardContent>
@@ -259,6 +265,15 @@ export default function LeadDetail() {
                           Missing key information reduces lead quality score and limits outreach options.
                         </p>
                         <div className="flex gap-2">
+                          <LeadEditModal 
+                            lead={lead}
+                            trigger={
+                              <Button size="sm" variant="default" className="bg-amber-600 hover:bg-amber-700 text-white border-none">
+                                <Plus className="w-4 h-4 mr-2" />
+                                Complete Profile
+                              </Button>
+                            }
+                          />
                           <FollowupScheduler 
                             leadId={leadId} 
                             leadName={lead.fullName}
