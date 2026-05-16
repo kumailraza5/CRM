@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
+import { authFetch } from "../../lib/api";
 
 interface Notification {
   id: number;
@@ -42,20 +43,29 @@ export function NotificationBell() {
 
   const { data: counts } = useQuery<NotificationCounts>({
     queryKey: ["/api/notifications/counts"],
+    queryFn: async () => {
+      const response = await authFetch("/api/notifications/counts");
+      if (!response.ok) throw new Error("Failed to fetch notification counts");
+      return response.json();
+    },
     refetchInterval: 30000, // Refresh every 30 seconds
   });
 
   const { data: notifications, isLoading } = useQuery<Notification[]>({
     queryKey: ["/api/notifications", { unreadOnly: true }],
+    queryFn: async () => {
+      const response = await authFetch("/api/notifications?unreadOnly=true");
+      if (!response.ok) throw new Error("Failed to fetch notifications");
+      return response.json();
+    },
     enabled: isOpen,
     refetchInterval: isOpen ? 10000 : 30000, // More frequent when open
   });
 
   const markAsRead = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/notifications/${id}/read`, {
+      const response = await authFetch(`/api/notifications/${id}/read`, {
         method: "POST",
-        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark as read");
       return response.json();
@@ -71,9 +81,8 @@ export function NotificationBell() {
 
   const markAllAsRead = useMutation({
     mutationFn: async () => {
-      const response = await fetch("/api/notifications/read-all", {
+      const response = await authFetch("/api/notifications/read-all", {
         method: "POST",
-        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to mark all as read");
       return response.json();
@@ -90,9 +99,8 @@ export function NotificationBell() {
 
   const deleteNotification = useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(`/api/notifications/${id}`, {
+      const response = await authFetch(`/api/notifications/${id}`, {
         method: "DELETE",
-        credentials: "include",
       });
       if (!response.ok) throw new Error("Failed to delete notification");
       return response.json();

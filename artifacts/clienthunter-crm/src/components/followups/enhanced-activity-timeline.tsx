@@ -22,6 +22,7 @@ import {
 import { FollowupScheduler } from "./followup-scheduler";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { authFetch } from "../../lib/api";
 
 interface Activity {
   id: number;
@@ -61,18 +62,26 @@ export function EnhancedActivityTimeline({ leadId, leadName }: EnhancedActivityT
 
   const { data: activities, isLoading: loadingActivities } = useQuery<Activity[]>({
     queryKey: ["/api/leads", leadId, "notes"],
+    queryFn: async () => {
+      const response = await authFetch(`/api/leads/${leadId}/notes`);
+      if (!response.ok) throw new Error("Failed to fetch activities");
+      return response.json();
+    }
   });
 
   const { data: followups, isLoading: loadingFollowups } = useQuery<Followup[]>({
     queryKey: ["/api/leads", leadId, "followups"],
+    queryFn: async () => {
+      const response = await authFetch(`/api/leads/${leadId}/followups`);
+      if (!response.ok) throw new Error("Failed to fetch follow-ups");
+      return response.json();
+    }
   });
 
   const createNote = useMutation({
     mutationFn: async (data: { type: string; content: string }) => {
-      const response = await fetch(`/api/leads/${leadId}/notes`, {
+      const response = await authFetch(`/api/leads/${leadId}/notes`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify(data),
       });
       if (!response.ok) throw new Error("Failed to add note");
@@ -89,10 +98,8 @@ export function EnhancedActivityTimeline({ leadId, leadName }: EnhancedActivityT
 
   const completeFollowup = useMutation({
     mutationFn: async (followupId: number) => {
-      const response = await fetch(`/api/followups/${followupId}/complete`, {
+      const response = await authFetch(`/api/followups/${followupId}/complete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ notes: "Completed from activity timeline" }),
       });
       if (!response.ok) throw new Error("Failed to complete follow-up");
@@ -117,10 +124,8 @@ export function EnhancedActivityTimeline({ leadId, leadName }: EnhancedActivityT
       // If follow-up scheduling is enabled, create the follow-up
       if (scheduleFollowup && followupTitle && followupDate) {
         const scheduledDateTime = new Date(`${followupDate}T${followupTime}`);
-        const response = await fetch(`/api/leads/${leadId}/followups`, {
+        const response = await authFetch(`/api/leads/${leadId}/followups`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
           body: JSON.stringify({
             type: noteType === "messaged" ? "email" : noteType === "meeting" ? "meeting" : "check_in",
             title: followupTitle,

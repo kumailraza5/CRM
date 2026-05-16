@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Clock, Plus, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
+import { authFetch } from "../../lib/api";
 
 interface FollowupSchedulerProps {
   leadId: number;
@@ -44,10 +45,8 @@ export function FollowupScheduler({ leadId, leadName, trigger }: FollowupSchedul
       const scheduledDateTime = new Date(`${formData.scheduledFor}T${formData.scheduledTime}`);
       const reminderDateTime = new Date(scheduledDateTime.getTime() - formData.reminderHours * 60 * 60 * 1000);
 
-      const response = await fetch(`/api/leads/${leadId}/followups`, {
+      const response = await authFetch(`/api/leads/${leadId}/followups`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({
           type: formData.type,
           title: formData.title,
@@ -58,7 +57,6 @@ export function FollowupScheduler({ leadId, leadName, trigger }: FollowupSchedul
           notes: formData.notes,
         }),
       });
-
       if (!response.ok) throw new Error("Failed to schedule follow-up");
 
       toast({ title: "Follow-up scheduled successfully" });
