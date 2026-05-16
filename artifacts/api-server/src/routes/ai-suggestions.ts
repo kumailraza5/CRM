@@ -6,7 +6,7 @@ const router: IRouter = Router();
 
 // Generate AI-powered follow-up suggestions based on lead score and status
 router.post("/leads/:id/ai-suggestions", async (req, res): Promise<void> => {
-  const leadId = parseInt(req.params.leadId);
+  const leadId = parseInt(req.params.id);
   if (isNaN(leadId)) {
     res.status(400).json({ error: "Invalid lead ID" });
     return;
@@ -230,7 +230,7 @@ router.post("/leads/:id/ai-suggestions", async (req, res): Promise<void> => {
 
 // Generate data enrichment tasks for incomplete profiles
 router.post("/leads/:id/enrichment-tasks", async (req, res): Promise<void> => {
-  const leadId = parseInt(req.params.leadId);
+  const leadId = parseInt(req.params.id);
   if (isNaN(leadId)) {
     res.status(400).json({ error: "Invalid lead ID" });
     return;
