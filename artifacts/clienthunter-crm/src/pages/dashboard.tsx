@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import { formatDistanceToNow, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { StatusBadge } from "@/components/ui/badges";
+import { DashboardAISummary } from "@/components/dashboard/ai-summary";
 
 export default function Dashboard() {
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
@@ -80,24 +81,30 @@ export default function Dashboard() {
           </motion.div>
         ) : null}
 
-        {/* KPIs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {cards.map((card, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
-                <card.icon className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loadingSummary ? <Skeleton className="h-8 w-20" /> : card.value || 0}
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {card.desc}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
+        {/* KPIs & AI Insights */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-1">
+            <DashboardAISummary />
+          </div>
+          
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {cards.map((card, i) => (
+              <Card key={i}>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">{card.title}</CardTitle>
+                  <card.icon className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingSummary ? <Skeleton className="h-8 w-20" /> : card.value || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {card.desc}
+                  </p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

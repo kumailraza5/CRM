@@ -22,6 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { EnhancedActivityTimeline } from "@/components/followups/enhanced-activity-timeline";
 import { FollowupScheduler } from "@/components/followups/followup-scheduler";
 import { LeadEditModal } from "@/components/leads/lead-edit-modal";
+import { authFetch } from "@/lib/api";
 
 export default function LeadDetail() {
   const params = useParams();
@@ -38,6 +39,27 @@ export default function LeadDetail() {
   const { data: notes, isLoading: loadingNotes } = useListNotes(leadId, {
     query: { enabled: !!leadId, queryKey: getListNotesQueryKey(leadId) }
   });
+
+  const [aiStrategy, setAiStrategy] = useState<any>(null);
+  const [loadingStrategy, setLoadingStrategy] = useState(false);
+
+  const getAiStrategy = async () => {
+    setLoadingStrategy(true);
+    try {
+      const response = await authFetch(`/api/leads/${leadId}/ai-suggestions`, {
+        method: "POST"
+      });
+      if (!response.ok) throw new Error("Failed to get suggestions");
+      const data = await response.json();
+      setAiStrategy(data);
+      queryClient.invalidateQueries({ queryKey: ["/api/leads", leadId, "followups"] });
+      toast({ title: "AI Strategy generated and follow-up scheduled" });
+    } catch (error) {
+      toast({ title: "Failed to generate AI strategy", variant: "destructive" });
+    } finally {
+      setLoadingStrategy(false);
+    }
+  };
 
   const updateLead = useUpdateLead();
   const { toast } = useToast();
@@ -295,6 +317,57 @@ export default function LeadDetail() {
               </CardContent>
             </Card>
 
+            {/* AI Action Plan */}
+            <Card className="border-primary/20 bg-primary/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-primary" />
+                  AI Action Plan
+                </CardTitle>
+                <CardDescription>Get a tailored outreach strategy</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {aiStrategy ? (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-1">
+                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-primary mb-1">Recommended Action</h4>
+                      <p className="text-sm font-semibold">{aiStrategy.recommendedAction}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Strategic Tips</h4>
+                      <ul className="space-y-2">
+                        {aiStrategy.suggestions.map((s: string, i: number) => (
+                          <li key={i} className="text-sm flex gap-2">
+                            <span className="text-primary">•</span>
+                            {s}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    {aiStrategy.createdFollowup && (
+                      <div className="text-xs text-muted-foreground p-2 bg-muted rounded border border-dashed">
+                        Auto-scheduled follow-up for {format(parseISO(aiStrategy.createdFollowup.scheduledFor), "MMM d, h:mm a")}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Let AI analyze this lead and suggest your next best move.
+                    </p>
+                    <Button 
+                      onClick={getAiStrategy} 
+                      disabled={loadingStrategy}
+                      className="w-full"
+                    >
+                      {loadingStrategy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Zap className="w-4 h-4 mr-2" />}
+                      Generate Strategy
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Enhanced Activity Timeline */}
             <EnhancedActivityTimeline 
               leadId={leadId} 
@@ -320,10 +393,27 @@ export default function LeadDetail() {
                       <div className="text-5xl font-black text-primary">{score.score}</div>
                       <div className="text-lg font-medium text-muted-foreground pb-1">/ 100</div>
                     </div>
-                    <Badge variant="outline" className="text-sm px-3 py-1 bg-background">{score.label}</Badge>
                     
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Recommendations</h4>
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-sm px-3 py-1 bg-background">{score.label}</Badge>
+                      <span className={`text-sm font-bold ${score.score >= 60 ? 'text-green-500' : score.score >= 40 ? 'text-amber-500' : 'text-red-500'}`}>
+                        {score.label} Potential
+                      </span>
+                    </div>
+                    
+                    <div className="p-3 bg-muted rounded-lg border border-border">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Zap className="w-4 h-4 text-amber-500" />
+                        <span className="text-sm font-semibold">Best Follow-up Time</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{score.bestFollowupTime}</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <h4 className="text-sm font-semibold flex items-center gap-2">
+                        <MessageSquare className="w-4 h-4 text-primary" />
+                        AI Recommendations
+                      </h4>
                       <ul className="space-y-2 text-sm text-muted-foreground">
                         {score.tips.map((tip, i) => (
                           <li key={i} className="flex gap-2">
