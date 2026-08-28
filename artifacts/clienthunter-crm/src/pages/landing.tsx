@@ -125,7 +125,7 @@ export default function Landing() {
             <span className="font-bold tracking-tight">ClientHunter</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} ClientHunter. The CRM for solo agencies.
+            © {new Date().getFullYear()} ClientHunter(Developed By Kumail Raza). The CRM for solo agencies.
           </p>
         </div>
       </footer>
